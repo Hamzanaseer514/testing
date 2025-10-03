@@ -20,31 +20,12 @@ const uploadDocument = asyncHandler(async (req, res) => {
     throw new Error("All fields and file are required");
   }
 
-  // Process file for base64 storage
-  const FileHandler = require('../Utils/fileHandler');
-  
-  // Validate file
-  if (!FileHandler.validateFile(req.file)) {
-    return res.status(400).json({ 
-      error: 'Invalid file. Only images and PDFs up to 10MB are allowed.' 
-    });
-  }
-
-  // Process file and get data for database storage
-  const fileData = FileHandler.processFile(req.file);
+  const relativePath = `/uploads/documents/${req.file.filename}`;
 
   const newDoc = await TutorDocument.create({
     tutor_id: tutor_id,
     document_type,
-    // New base64 fields
-    fileName: fileData.fileName,
-    originalName: fileData.originalName,
-    mimetype: fileData.mimetype,
-    size: fileData.size,
-    base64Data: fileData.base64Data,
-    fileType: fileData.fileType,
-    // Legacy field for backward compatibility
-    file_url: FileHandler.createFileUrl(fileData.fileName, process.env.BASE_URL || 'http://localhost:5000'),
+    file_url: relativePath,
     uploaded_at: new Date(),
     verification_status: "Pending",
   });
@@ -149,18 +130,7 @@ const reuploadDocument = asyncHandler(async (req, res) => {
       });
     }
 
-    // Process file for base64 storage
-    const FileHandler = require('../Utils/fileHandler');
-    
-    // Validate file
-    if (!FileHandler.validateFile(req.file)) {
-      return res.status(400).json({ 
-        error: 'Invalid file. Only images and PDFs up to 10MB are allowed.' 
-      });
-    }
-
-    // Process file and get data for database storage
-    const fileData = FileHandler.processFile(req.file);
+    const relativePath = `/uploads/documents/${req.file.filename}`;
 
     // Always find existing document by document_type and tutor_id (replace approach)
     const existingDoc = await TutorDocument.findOne({
@@ -170,13 +140,7 @@ const reuploadDocument = asyncHandler(async (req, res) => {
 
     if (existingDoc) {
       // Update existing document (replace)
-      existingDoc.fileName = fileData.fileName;
-      existingDoc.originalName = fileData.originalName;
-      existingDoc.mimetype = fileData.mimetype;
-      existingDoc.size = fileData.size;
-      existingDoc.base64Data = fileData.base64Data;
-      existingDoc.fileType = fileData.fileType;
-      existingDoc.file_url = FileHandler.createFileUrl(fileData.fileName, process.env.BASE_URL || 'http://localhost:5000');
+      existingDoc.file_url = relativePath;
       existingDoc.uploaded_at = new Date();
       existingDoc.verification_status = "Pending";
       existingDoc.notes = ""; // Clear any previous notes
@@ -191,13 +155,7 @@ const reuploadDocument = asyncHandler(async (req, res) => {
       const newDoc = await TutorDocument.create({
         tutor_id: tutorProfile._id,
         document_type: document_type,
-        fileName: fileData.fileName,
-        originalName: fileData.originalName,
-        mimetype: fileData.mimetype,
-        size: fileData.size,
-        base64Data: fileData.base64Data,
-        fileType: fileData.fileType,
-        file_url: FileHandler.createFileUrl(fileData.fileName, process.env.BASE_URL || 'http://localhost:5000'),
+        file_url: relativePath,
         uploaded_at: new Date(),
         verification_status: "Pending",
       });

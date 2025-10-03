@@ -43,8 +43,24 @@ const {
 } = require('../Controllers/tutorController');
 const {protect} = require('../Middleware/authMiddleware');
 
-// Import the Vercel-compatible multer config
-const upload = require('../Utils/multerConfig');
+// Multer config for tutor documents
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/documents/');
+  },  
+  filename: (req, file, cb) => {
+    const documentType = req.body.document_type?.replace(/\s+/g, '_') || 'unknownType';
+    const ext = path.extname(file.originalname);
+    console.log("file", ext);
+    const base = path.basename(file.originalname, ext);
+    console.log("base", base);
+    const newFileName = `${base}${ext}`;
+    console.log("newFileName", newFileName);
+    cb(null, newFileName);
+  }
+});
+
+const upload = multer({ storage });
 
 // Public routes (no authentication required)
 router.get('/verified', getVerifiedTutors);

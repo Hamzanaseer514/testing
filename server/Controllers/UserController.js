@@ -333,39 +333,32 @@ exports.registerTutor = asyncHandler(async (req, res) => {
         throw new Error("Invalid documentsMap format");
       }
 
-      // Import FileHandler for base64 processing
-      const FileHandler = require('../Utils/fileHandler');
-
       for (const [documentType, originalFileName] of Object.entries(documentsObj)) {
         const uploadedFile = req.files["documents"].find(
           file => file.originalname === originalFileName
         );
         if (!uploadedFile) continue;
 
-        // Validate file
-        if (!FileHandler.validateFile(uploadedFile)) {
-          console.error(`Invalid file: ${originalFileName}`);
-          continue;
-        }
+        const oldPath = uploadedFile.path;
+        const ext = path.extname(uploadedFile.filename);
+        console.log("ext", ext);
+        const base = path.basename(uploadedFile.filename, ext);
+        console.log("base", base);
+        const newFilename = `${base}${ext}`;
+        console.log("newFilename", newFilename);
+        const newPath = `uploads/documents/${newFilename}`;
 
-        // Process file and get data for database storage
-        const fileData = FileHandler.processFile(uploadedFile);
+        fs.renameSync(oldPath, newPath);
 
+        const relativePath = `/uploads/documents/${newFilename}`;
         const newDoc = await TutorDocument.create(
           [
             {
               tutor_id: tutorProfile[0]._id,
               document_type: documentType,
-              // New base64 fields
-              fileName: fileData.fileName,
-              originalName: fileData.originalName,
-              mimetype: fileData.mimetype,
-              size: fileData.size,
-              base64Data: fileData.base64Data,
-              fileType: fileData.fileType,
-              // Legacy field for backward compatibility
-              file_url: FileHandler.createFileUrl(fileData.fileName, process.env.BASE_URL || 'http://localhost:5000'),
+              file_url: relativePath,
               uploaded_at: new Date(),
+              verified_by_admin: false,
               verification_status: "Pending"
             }
           ],
@@ -412,12 +405,9 @@ console.log(req.body)
   // Get photo URL from uploaded file or use default
   let photo_url = null;
   if (req.body.photo_url) {
-    // If it's already a full URL, use it; otherwise create proper URL
-    if (req.body.photo_url.startsWith('http')) {
-      photo_url = req.body.photo_url;
-    } else {
-      photo_url = `${process.env.BASE_URL || 'http://localhost:5000'}/api/files/${req.body.photo_url}`;
-    }
+    photo_url = `/uploads/documents/${req.body.photo_url}`;
+  } else if (req.body.photo_url) {
+    photo_url = req.body.photo_url;
   }
   console.log("Photo URL:", photo_url);
   if (!email || !password || !full_name) {
@@ -1019,39 +1009,15 @@ exports.updateUserPhoto = asyncHandler(async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
-
-    // Process file for base64 storage
-    const FileHandler = require('../Utils/fileHandler');
-    
-    // Validate file
-    if (!FileHandler.validateFile(req.file)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid file. Only images and PDFs up to 10MB are allowed.' 
-      });
-    }
-
-    // Process file and get data for database storage
-    const fileData = FileHandler.processFile(req.file);
-    
-    // Create file URL for photo
-    const photoUrl = FileHandler.createFileUrl(fileData.fileName, process.env.BASE_URL || 'http://localhost:5000');
-
+    const relativePath = `/uploads/documents/${req.file.filename}`;
     const user = await User.findByIdAndUpdate(
       user_id,
-      { 
-        photo_url: photoUrl,
-        // Store base64 data in user model if needed (optional)
-        photo_base64: fileData.base64Data,
-        photo_mimetype: fileData.mimetype
-      },
+      { photo_url: relativePath },
       { new: true }
     ).select('photo_url');
-    
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
     return res.status(200).json({ success: true, photo_url: user.photo_url });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });

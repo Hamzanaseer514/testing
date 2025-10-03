@@ -1,24 +1,34 @@
 const multer = require('multer');
+const path = require('path');
 
-// Configure memory storage for Vercel compatibility
-const storage = multer.memoryStorage();
+// Configure storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/documents/');
+  },
+  filename: function (req, file, cb) {
+    // Generate unique filename with timestamp
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
 
-// File filter function - Updated to support both images and PDFs
+// File filter function
 const fileFilter = (req, file, cb) => {
-  // Allow image files and PDF files
-  if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
+  // Allow only image files
+  if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error('Only image and PDF files are allowed!'), false);
+    cb(new Error('Only image files are allowed!'), false);
   }
 };
 
-// Configure multer with memory storage
+// Configure multer
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit (increased for PDFs)
+    fileSize: 5 * 1024 * 1024, // 5MB limit
   }
 });
 

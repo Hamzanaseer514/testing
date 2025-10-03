@@ -11,36 +11,9 @@ const tutorDocumentSchema = new mongoose.Schema({
     enum: ['ID Proof', 'Address Proof', 'Degree', 'Certificate', 'Reference Letter', 'Background Check'],
     required: true
   },
-  // Legacy field for backward compatibility
   file_url: {
     type: String,
-    required: false // Made optional for new base64 approach
-  },
-  // New fields for Vercel-compatible storage
-  fileName: {
-    type: String,
-    required: false
-  },
-  originalName: {
-    type: String,
-    required: false
-  },
-  mimetype: {
-    type: String,
-    required: false
-  },
-  size: {
-    type: Number,
-    required: false
-  },
-  base64Data: {
-    type: String,
-    required: false // Store base64 encoded file
-  },
-  fileType: {
-    type: String,
-    enum: ['image', 'pdf'],
-    required: false
+    required: true
   },
   uploaded_at: {
     type: Date,
