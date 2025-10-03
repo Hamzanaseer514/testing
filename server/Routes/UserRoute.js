@@ -22,26 +22,8 @@ const { getStudentDashboard, updateStudentProfile,
 const { getUserProfile, updateUserPhoto, refreshAccessToken, logoutUser } = require("../Controllers/UserController")
 
 const { protect } = require("../Middleware/authMiddleware")
-const multer = require("multer");
-const path = require("path");
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    console.log("file", file);
-    cb(null, 'uploads/documents/');
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    console.log("ext", ext);
-    const base = path.basename(file.originalname, ext);
-    console.log("base", base);
-    const newName = `${base}${ext}`;
-    console.log("newName", newName);
-    cb(null, newName);
-  }
-});
-
-const upload = multer({ storage });
+// Import the Vercel-compatible multer config
+const upload = require('../Utils/multerConfig');
 
 
 router.get("/student/profile/:userId", protect, getStudentProfile);
