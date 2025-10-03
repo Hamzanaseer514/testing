@@ -346,7 +346,7 @@ exports.registerTutor = asyncHandler(async (req, res) => {
         console.log("base", base);
         const newFilename = `${base}${ext}`;
         console.log("newFilename", newFilename);
-        const newPath = `uploads/documents/${newFilename}`;
+        const newPath = `https://tuterbybackend.onrender.com/uploads/documents/${newFilename}`;
 
         fs.renameSync(oldPath, newPath);
 
