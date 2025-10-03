@@ -28,7 +28,7 @@ const path = require("path");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     console.log("file", file);
-    cb(null, 'uploads/documents/');
+    cb(null, 'https://tuterbybackend.onrender.com/uploads/documents/');
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);

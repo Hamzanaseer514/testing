@@ -46,7 +46,7 @@ const {protect} = require('../Middleware/authMiddleware');
 // Multer config for tutor documents
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/documents/');
+    cb(null, 'https://tuterbybackend.onrender.com/uploads/documents/');
   },  
   filename: (req, file, cb) => {
     const documentType = req.body.document_type?.replace(/\s+/g, '_') || 'unknownType';
